@@ -12,12 +12,13 @@ public class LoopPlayer : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-        if (loopSources.Length > 0 && AudioSettings.dspTime >= nextNoteTime - preScheduleNextNoteTime)
+        while(loopSources.Length > 0 && AudioSettings.dspTime >= nextNoteTime - preScheduleNextNoteTime)
             ScheduleNextNote();
 	}
 
     void ScheduleNextNote()
     {
+		Debug.Log ("Scheduling noote at time " + nextNoteTime + " for index " + currentNoteIndex);
         // Schedule the note to play
         loopSources[currentNoteIndex].PlayScheduled(nextNoteTime);
         
@@ -26,11 +27,11 @@ public class LoopPlayer : MonoBehaviour {
         if(currentNoteIndex >= noteBeats.Length)
         {
             currentNoteIndex = 0;
-            nextNoteTime += 4 - noteBeats[noteBeats.Length - 1] + noteBeats[0];
+			nextNoteTime += (4 - noteBeats[noteBeats.Length - 1] + noteBeats[0])/SongController.GetBPM()*60;
         }
         else
         {
-            nextNoteTime += noteBeats[currentNoteIndex] - noteBeats[currentNoteIndex - 1];
+			nextNoteTime += (noteBeats[currentNoteIndex] - noteBeats[currentNoteIndex - 1])/SongController.GetBPM()*60;
         }
     }
 
@@ -57,7 +58,7 @@ public class LoopPlayer : MonoBehaviour {
         currentNoteIndex = 0;
         double startOfMeasure = SongController.GetNextStartOfMeasure();
         nextNoteTime = startOfMeasure + noteBeats[0] / SongController.GetBPM() * 60.0;
-        ScheduleNextNote();
+//        ScheduleNextNote();
     }
 
     private AudioSource AddLoopPlayerWithOriginal(AudioSource originalAudioSource)
