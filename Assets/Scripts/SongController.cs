@@ -14,6 +14,7 @@ public class SongController : MonoBehaviour {
     void Start()
     {
         bpm = startingBPM;
+        timeSignatureNumerator = 4;
         PlaySong();
     }
 
@@ -37,6 +38,18 @@ public class SongController : MonoBehaviour {
             returnTime += beatLength;
         }
         return returnTime; //  returnTime + 0.5 * beatLength > unadjustedTime ? returnTime - beatLength : returnTime;
+    }
+
+    static public double GetNextStartOfMeasure()
+    {
+        double currentTime = AudioSettings.dspTime;
+        double returnTime = startDSPTime;
+        double measureLength = GetMeasureLength();
+        while (returnTime < currentTime)
+        {
+            returnTime += measureLength;
+        }
+        return returnTime;
     }
 
     static private double GetBeatLength()

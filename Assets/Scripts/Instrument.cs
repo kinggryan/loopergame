@@ -3,6 +3,7 @@ using System.Collections;
 
 public class Instrument : MonoBehaviour {
 
+    public LoopPlayer loopPlayer;
     public AudioSource instrumentSound;
     public int instrumentNumber;
 
@@ -23,15 +24,6 @@ public class Instrument : MonoBehaviour {
         numFramesRead = 0;
         playNoteNextUpdate = false;
         stopNextUpdate = false;
-
-        //// Read the audio data from the existing clip.
-        //float[] samples = new float[instrumentSound.clip.samples * instrumentSound.clip.channels];
-        //instrumentSound.clip.GetData(samples, 0);
-
-        //// Create the new clp
-        //AudioClip newClip = AudioClip.Create(instrumentSound.clip.name + "_wCallback", instrumentSound.clip.samples, instrumentSound.clip.channels, instrumentSound.clip.frequency, false, null, InstrumentClipPositionChanged);
-        //newClip.SetData(samples, 0);
-        //instrumentSound.clip = newClip;
     }
 	
 	// Update is called once per frame
@@ -44,7 +36,11 @@ public class Instrument : MonoBehaviour {
 
     void PlayNote()
     {
-        //instrumentSound.Stop();
+        double[] testNotes = new double[4] { 0, 1, 2, 3 };
+        loopPlayer.PlayLoop(testNotes, instrumentSound);
+
+        return;
+
         if(!instrumentSound.isPlaying)
         {
             playNoteNextUpdate = false;
@@ -53,12 +49,6 @@ public class Instrument : MonoBehaviour {
         }
     }
 
-    //// Audio Callbacks
-    //void InstrumentClipPositionChanged(int frameNumber)
-    //{
-    //    Debug.Log(frameNumber);
-    //}
-
     void OnAudioFilterRead(float[] data, int channels)
     {
         numFramesRead += data.Length/2;
@@ -66,7 +56,6 @@ public class Instrument : MonoBehaviour {
         {
             numFramesRead = 0;
             playNoteNextUpdate = true;
-           // Debug.Log("File finished!");
         }
     }
 }
