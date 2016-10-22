@@ -22,6 +22,7 @@ public class SongController : MonoBehaviour {
     {
         startDSPTime = AudioSettings.dspTime + 0.25;
         songPlayer.PlayScheduled(startDSPTime);
+        Debug.Log("Start time " + startDSPTime);
     }
 
     static public double GetBPM()

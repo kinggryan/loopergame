@@ -36,7 +36,7 @@ public class Instrument : MonoBehaviour {
 
     void PlayNote()
     {
-        double[] testNotes = new double[3] { 0, 1.5, 2.5 };
+        double[] testNotes = new double[4] { 0, 1, 2, 3 };
         loopPlayer.PlayLoop(testNotes, instrumentSound);
 
         return;

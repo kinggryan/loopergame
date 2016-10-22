@@ -12,13 +12,12 @@ public class LoopPlayer : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-        while(loopSources.Length > 0 && AudioSettings.dspTime >= nextNoteTime - preScheduleNextNoteTime)
+        while(loopSources.Length > 0 && AudioSettings.dspTime >= nextNoteTime + preScheduleNextNoteTime)
             ScheduleNextNote();
 	}
 
     void ScheduleNextNote()
     {
-		Debug.Log ("Scheduling noote at time " + nextNoteTime + " for index " + currentNoteIndex);
         // Schedule the note to play
         loopSources[currentNoteIndex].PlayScheduled(nextNoteTime);
         
