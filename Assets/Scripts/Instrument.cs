@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Instrument : MonoBehaviour {
 
-    public LoopPlayer loopPlayer;
+    public RecordingController recordingController;
     public AudioSource instrumentSound;
     public int instrumentNumber;
 
@@ -36,26 +36,23 @@ public class Instrument : MonoBehaviour {
 
     void PlayNote()
     {
-        double[] testNotes = new double[4] { 0, 1, 2, 3 };
-        loopPlayer.PlayLoop(testNotes, instrumentSound);
-
-        return;
-
+        Debug.Log("Playing note");
         if(!instrumentSound.isPlaying)
         {
             playNoteNextUpdate = false;
-            double playTime = SongController.GetNearestBeatTimeFromTime(AudioSettings.dspTime);
+            double playTime = SongController.GetNearestPlayableNoteTimeFromTime(AudioSettings.dspTime);
             instrumentSound.PlayScheduled(playTime);
+            recordingController.RecordNoteAtTime(playTime);
         }
     }
 
-    void OnAudioFilterRead(float[] data, int channels)
-    {
-        numFramesRead += data.Length/2;
-        if (numFramesRead >= instrumentClipFrameLength)
-        {
-            numFramesRead = 0;
-            playNoteNextUpdate = true;
-        }
-    }
+    //void OnAudioFilterRead(float[] data, int channels)
+    //{
+    //    numFramesRead += data.Length/2;
+    //    if (numFramesRead >= instrumentClipFrameLength)
+    //    {
+    //        numFramesRead = 0;
+    //        playNoteNextUpdate = true;
+    //    }
+    //}
 }

@@ -38,7 +38,18 @@ public class SongController : MonoBehaviour {
         {
             returnTime += beatLength;
         }
-        return returnTime; //  returnTime + 0.5 * beatLength > unadjustedTime ? returnTime - beatLength : returnTime;
+        return returnTime + 0.5 * beatLength > unadjustedTime ? returnTime - beatLength : returnTime;
+    }
+
+    static public double GetNearestPlayableNoteTimeFromTime(double unadjustedTime)
+    {
+        double returnTime = startDSPTime;
+        double beatLength = GetBeatLength()/2;
+        while (returnTime < unadjustedTime)
+        {
+            returnTime += beatLength;
+        }
+        return returnTime + 0.5 * beatLength > unadjustedTime ? returnTime - beatLength : returnTime;
     }
 
     static public double GetNextStartOfMeasure()
@@ -53,7 +64,7 @@ public class SongController : MonoBehaviour {
         return returnTime;
     }
 
-    static private double GetBeatLength()
+    static public double GetBeatLength()
     {
         return 60.0 / bpm;
     }
@@ -61,7 +72,7 @@ public class SongController : MonoBehaviour {
     /**
         Returns the length of a measure in seconds.
     */
-    static private double GetMeasureLength()  
+    static public double GetMeasureLength()  
     {
         return timeSignatureNumerator / bpm * 60;
     }
