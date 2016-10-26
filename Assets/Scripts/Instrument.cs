@@ -42,7 +42,7 @@ public class Instrument : MonoBehaviour {
             playNoteNextUpdate = false;
             double playTime = SongController.GetNearestPlayableNoteTimeFromTime(AudioSettings.dspTime);
             instrumentSound.PlayScheduled(playTime);
-            recordingController.RecordNoteAtTime(playTime);
+            recordingController.RecordNoteAtTime(playTime,instrumentNumber);
         }
     }
 
