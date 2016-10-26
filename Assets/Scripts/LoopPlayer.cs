@@ -18,18 +18,30 @@ public class LoopPlayer : MonoBehaviour {
     // For now, always assuming 4 beat measures
 	public double preScheduleNextNoteTime = -0.5;
 
+    public int numInstruments;
 	private List<TrackLoopInfo> tracks;
 
 	void Start() {
-		tracks = new List<TrackLoopInfo> ();
+        tracks = new List<TrackLoopInfo>();
+        for(int i = 0; i < numInstruments; i++)
+        {
+            TrackLoopInfo track = new TrackLoopInfo();
+            track.audioSources = new List<AudioSource>();
+            track.noteBeats = new List<double>();
+            tracks.Add(track);
+        }
 	}
 
 	// Update is called once per frame
 	void Update () {
-		foreach(TrackLoopInfo track in tracks) {
-			while (AudioSettings.dspTime >= track.nextNoteTime + preScheduleNextNoteTime)
-				ScheduleNextNoteForTrack (track);
-		}
+		for(int i = 0; i < tracks.Count; i++) {
+            TrackLoopInfo track = tracks[i];
+			while (track.noteBeats.Count > 0 && AudioSettings.dspTime >= track.nextNoteTime + preScheduleNextNoteTime)
+            {
+                ScheduleNextNoteForTrack(track);
+                tracks[i] = track;
+            }
+        }
 	}
 
 	void ScheduleNextNoteForTrack(TrackLoopInfo track)
@@ -97,7 +109,7 @@ public class LoopPlayer : MonoBehaviour {
 			double newNoteBeat = noteBeats [i];
 
 			// Find the index to insert this note beat at
-			while (track.noteBeats [insertionIndex] < newNoteBeat)
+			while (insertionIndex < track.noteBeats.Count && track.noteBeats [insertionIndex] < newNoteBeat)
 				insertionIndex++;
 
 			// Now that it's been found, we need to insert it into the arrays

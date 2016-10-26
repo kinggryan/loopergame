@@ -62,8 +62,11 @@ public class RecordingController : MonoBehaviour {
     public void StopRecording()
     {
         Debug.Log("Stop recording " + recordedNotes);
-        if(recordedNotes.Length > 0)
+        if (recordedNotes.Length > 0)
+        {
+            Debug.Log(recordedNotes);
             loopPlayer.PlayLoop(recordedNotes, instrumentSources);
+        }
         isRecording = false;
 		ResetRecordedNotes ();
 	}
@@ -76,7 +79,7 @@ public class RecordingController : MonoBehaviour {
             if(noteBeat >= 0 && noteBeat < 4)
             {
                 double[] newNotes = new double[recordedNotes[instrumentNumber].Length + 1];
-                for(int i = 0; i < recordedNotes.Length; i++)
+                for(int i = 0; i < recordedNotes[instrumentNumber].Length; i++)
                 {
                     newNotes[i] = recordedNotes[instrumentNumber][i];
                 }
