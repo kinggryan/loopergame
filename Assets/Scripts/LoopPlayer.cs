@@ -38,13 +38,13 @@ public class LoopPlayer : MonoBehaviour {
             TrackLoopInfo track = tracks[i];
 			while (track.noteBeats.Count > 0 && AudioSettings.dspTime >= track.nextNoteTime + preScheduleNextNoteTime)
             {
-                ScheduleNextNoteForTrack(track);
+                track = ScheduleNextNoteForTrack(track);
                 tracks[i] = track;
             }
         }
 	}
 
-	void ScheduleNextNoteForTrack(TrackLoopInfo track)
+	TrackLoopInfo ScheduleNextNoteForTrack(TrackLoopInfo track)
     {
         // Schedule the note to play
 		track.audioSources[track.currentNoteIndex].PlayScheduled(track.nextNoteTime);
@@ -60,21 +60,25 @@ public class LoopPlayer : MonoBehaviour {
         {
 			track.nextNoteTime += (track.noteBeats[track.currentNoteIndex] - track.noteBeats[track.currentNoteIndex - 1])/SongController.GetBPM()*60;
         }
+
+		return track;
     }
 
     public void PlayLoop(double[][] loopBeats,AudioSource[] originalAudioSources)
     {
 		for (int trackNumber = 0; trackNumber < loopBeats.Length; trackNumber++) {
-			// Clean up old beats and loop sources
-			// TODO: Recycle loop sources when possible
-			AddNoteBeatsToTrack(loopBeats[trackNumber],tracks[trackNumber],originalAudioSources[trackNumber]);
+			if (loopBeats [trackNumber].Length > 0) {
+				// Clean up old beats and loop sources
+				// TODO: Recycle loop sources when possible
 
-			// Setup next note time
-			TrackLoopInfo track = tracks[trackNumber];
-			track.currentNoteIndex = 0;
-			double startOfMeasure = SongController.GetNextStartOfMeasure();
-			track.nextNoteTime = startOfMeasure + track.noteBeats[0] / SongController.GetBPM() * 60.0;
-			tracks [trackNumber] = track;
+
+				// Setup next note time
+				TrackLoopInfo track = AddNoteBeatsToTrack (loopBeats [trackNumber], tracks [trackNumber], originalAudioSources [trackNumber]);
+				track.currentNoteIndex = 0;
+				double startOfMeasure = SongController.GetNextStartOfMeasure ();
+				track.nextNoteTime = startOfMeasure + track.noteBeats [0] / SongController.GetBPM () * 60.0;
+				tracks [trackNumber] = track;
+			}
 		}        
     }
 
@@ -102,7 +106,7 @@ public class LoopPlayer : MonoBehaviour {
 		return adjustedLoop;
 	}
 
-	private void AddNoteBeatsToTrack(double[] noteBeats,TrackLoopInfo track,AudioSource originalAudioSource)
+	private TrackLoopInfo AddNoteBeatsToTrack(double[] noteBeats,TrackLoopInfo track,AudioSource originalAudioSource)
 	{
 		int insertionIndex = 0;
 		for (int i = 0; i < noteBeats.Length; i++) {
@@ -120,6 +124,8 @@ public class LoopPlayer : MonoBehaviour {
 			if (track.currentNoteIndex > insertionIndex)
 				track.currentNoteIndex++;
 		}
+
+		return track;
 	}
 
     private AudioSource AddLoopPlayerWithOriginal(AudioSource originalAudioSource)
