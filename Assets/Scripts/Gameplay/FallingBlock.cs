@@ -23,7 +23,6 @@ public class FallingBlock : MonoBehaviour {
     
     void OnTriggerEnter2D(Collider2D collider)
     {
-        Debug.Log("Collision");
         Bucket bucket = collider.GetComponent<Bucket>();
         if (bucket)
         {

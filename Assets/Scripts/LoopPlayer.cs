@@ -17,6 +17,7 @@ public class LoopPlayer : MonoBehaviour {
 
     // For now, always assuming 4 beat measures
 	public double preScheduleNextNoteTime = -0.5;
+    public InstrumentBlockBreaker blockBreaker;
 
     public int numInstruments;
 	private List<TrackLoopInfo> tracks;
@@ -38,6 +39,7 @@ public class LoopPlayer : MonoBehaviour {
             TrackLoopInfo track = tracks[i];
 			while (track.noteBeats.Count > 0 && AudioSettings.dspTime >= track.nextNoteTime + preScheduleNextNoteTime)
             {
+                blockBreaker.PlayInstrumentInSeconds(i,(float)(track.nextNoteTime - AudioSettings.dspTime));
                 track = ScheduleNextNoteForTrack(track);
                 tracks[i] = track;
             }
