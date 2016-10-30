@@ -21,6 +21,7 @@ public class LoopPlayer : MonoBehaviour {
 
     public int numInstruments;
 	private List<TrackLoopInfo> tracks;
+    private List<Loop> loops;
 
 	void Start() {
         tracks = new List<TrackLoopInfo>();
@@ -31,6 +32,8 @@ public class LoopPlayer : MonoBehaviour {
             track.noteBeats = new List<double>();
             tracks.Add(track);
         }
+
+        loops = new List<Loop>();
 	}
 
 	// Update is called once per frame
@@ -83,6 +86,8 @@ public class LoopPlayer : MonoBehaviour {
 			}
 		}        
     }
+
+
 
 	private Loop GetLoopWithRedundantNotesRemoved(Loop loop)
 	{
@@ -140,5 +145,65 @@ public class LoopPlayer : MonoBehaviour {
         newSource.pitch = originalAudioSource.pitch;
 
         return newSource;
+    }
+
+    private void RemoveLoop(int loopIndex)
+    {
+        Loop loopToRemove = loops[loopIndex];
+        loops.RemoveAt(loopIndex);
+
+        // determine which notes in this loop are not duplicated in other loops
+        // TODO: Efficiency improvements
+        for (int instrumentNumber = 0; instrumentNumber < loopToRemove.noteBeats.Count; instrumentNumber++)
+        {
+            foreach (Loop loop in loops)
+            {
+                List<double> loopNoteBeats = loop.noteBeats[instrumentNumber];
+                foreach(double noteBeat in loopNoteBeats)
+                {
+                    for(int beatNum = 0; beatNum < loopToRemove.noteBeats[instrumentNumber].Count; beatNum++)
+                    {
+                        if(Mathf.Approximately((float)loopToRemove.noteBeats[instrumentNumber][beatNum],(float)noteBeat))
+                        {
+                            loopToRemove.noteBeats[instrumentNumber].RemoveAt(beatNum);
+                            beatNum--;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Now remove the non-overlapping notes from the note beats
+        for(int instrumentNum = 0; instrumentNum < loopToRemove.noteBeats.Count; instrumentNum++)
+        {
+            List<double> noteBeats = loopToRemove.noteBeats[instrumentNum];
+            tracks[instrumentNum] = RemoveNoteBeatsFromTrack(tracks[instrumentNum], noteBeats);
+        }
+    }
+
+    TrackLoopInfo RemoveNoteBeatsFromTrack(TrackLoopInfo track,List<double> noteBeats)
+    {
+        // Remove note beats
+        // TODO: Efficiency improvements
+        for(int i = 0; i < noteBeats.Count; i++)
+        {
+            for(int trackNoteBeatIndex = 0; trackNoteBeatIndex < track.noteBeats.Count; trackNoteBeatIndex++)
+            {
+                if(Mathf.Approximately((float)track.noteBeats[trackNoteBeatIndex],(float)noteBeats[i]))
+                {
+                    track.noteBeats.RemoveAt(trackNoteBeatIndex);
+                    Object.Destroy(track.audioSources[trackNoteBeatIndex]);
+                    track.audioSources.RemoveAt(trackNoteBeatIndex);
+                    break;
+                }
+            }
+        }
+
+        // Recalculate next note stuff for track
+        track.currentNoteIndex = 0;
+        double startOfMeasure = SongController.GetNextStartOfMeasure();
+        track.nextNoteTime = startOfMeasure + track.noteBeats[0] / SongController.GetBPM() * 60.0;
+
+        return track;
     }
 }
