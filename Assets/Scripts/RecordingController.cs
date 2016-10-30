@@ -64,7 +64,6 @@ public class RecordingController : MonoBehaviour {
         Debug.Log("Stop recording " + recordedNotes);
         if (recordedNotes.Length > 0)
         {
-            Debug.Log(recordedNotes);
             loopPlayer.PlayLoop(recordedNotes, instrumentSources);
         }
         isRecording = false;
