@@ -20,4 +20,14 @@ public class FallingBlock : MonoBehaviour {
 		transform.position = new Vector3(transform.position.x,transform.position.y - fallSpeed * dspTimeDelta,transform.position.z);
 		previousDSPTime = currentDSPTime;
 	}
+    
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        Debug.Log("Collision");
+        Bucket bucket = collider.GetComponent<Bucket>();
+        if (bucket)
+        {
+            bucket.ConnectWithBlock(this);
+        }
+    }
 }
