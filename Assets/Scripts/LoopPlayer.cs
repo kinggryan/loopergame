@@ -20,6 +20,7 @@ public class LoopPlayer : MonoBehaviour {
     public InstrumentBlockBreaker blockBreaker;
 
     public int numInstruments;
+    public int numLoops = 4;
 	private List<TrackLoopInfo> tracks;
     private List<Loop> loops;
 
@@ -34,6 +35,14 @@ public class LoopPlayer : MonoBehaviour {
         }
 
         loops = new List<Loop>();
+        for(int i = 0; i < numLoops; i++)
+        {
+            Loop newLoop = new Loop();
+            newLoop.noteBeats = new List<List<double>>();
+            for (int inNum = 0; inNum < numInstruments; inNum++)
+                newLoop.noteBeats.Add(new List<double>());
+            loops.Add(newLoop);
+        }
 	}
 
 	// Update is called once per frame
@@ -69,16 +78,29 @@ public class LoopPlayer : MonoBehaviour {
 		return track;
     }
 
-    public void PlayLoop(double[][] loopBeats,AudioSource[] originalAudioSources)
+    public void PlayLoop(double[][] loopBeats,AudioSource[] originalAudioSources,int loopNumber)
     {
-		for (int trackNumber = 0; trackNumber < loopBeats.Length; trackNumber++) {
-			if (loopBeats [trackNumber].Length > 0) {
-				// Clean up old beats and loop sources
-				// TODO: Recycle loop sources when possible
+        RemoveLoop(loopNumber);
+
+        Loop loopToAdd = new Loop();
+        loopToAdd.noteBeats = new List<List<double>>();
+        for (int i = 0; i < loopBeats.Length; i++)
+        {
+            List<double> loopBeatList = new List<double>(loopBeats[i]);
+            loopToAdd.noteBeats.Add(loopBeatList);
+        }
+
+        loops[loopNumber] = loopToAdd;
+        Loop fixedLoop = GetLoopWithRedundantNotesRemoved(loopToAdd);
+
+		for (int trackNumber = 0; trackNumber < fixedLoop.noteBeats.Count; trackNumber++) {
+			if (fixedLoop.noteBeats[trackNumber].Count > 0) {
+                // Clean up old beats and loop sources
+                // TODO: Recycle loop sources when possible
 
 
-				// Setup next note time
-				TrackLoopInfo track = AddNoteBeatsToTrack (loopBeats [trackNumber], tracks [trackNumber], originalAudioSources [trackNumber]);
+                // Setup next note time
+                TrackLoopInfo track = AddNoteBeatsToTrack(fixedLoop.noteBeats[trackNumber].ToArray(), tracks [trackNumber], originalAudioSources [trackNumber]);
 				track.currentNoteIndex = 0;
 				double startOfMeasure = SongController.GetNextStartOfMeasure ();
 				track.nextNoteTime = startOfMeasure + track.noteBeats [0] / SongController.GetBPM () * 60.0;
@@ -99,13 +121,15 @@ public class LoopPlayer : MonoBehaviour {
 
 			// For all the beats in this track, determine if they're equal to a beat in the existing track
 			for (int trackNoteIndex = 0; trackNoteIndex < loop.noteBeats[trackIndex].Count; trackNoteIndex++) {
+                bool addNote = true;
 				for (int masterTrackNoteIndex = 0; masterTrackNoteIndex < tracks [trackIndex].noteBeats.Count; masterTrackNoteIndex++) {
-					
-					if (!Mathf.Approximately((float)tracks [trackIndex].noteBeats [masterTrackNoteIndex],(float)loop.noteBeats[trackIndex][trackNoteIndex])) {
-						newNoteBeats.Add (loop.noteBeats[trackIndex] [trackNoteIndex]);
+					if (Mathf.Approximately((float)tracks [trackIndex].noteBeats [masterTrackNoteIndex],(float)loop.noteBeats[trackIndex][trackNoteIndex])) {
+                        addNote = false;
 					}
 				}
-			}
+                if(addNote)
+                    newNoteBeats.Add(loop.noteBeats[trackIndex][trackNoteIndex]);
+            }
 
 			adjustedLoop.noteBeats [trackIndex] = newNoteBeats;
 		}
@@ -150,26 +174,17 @@ public class LoopPlayer : MonoBehaviour {
     private void RemoveLoop(int loopIndex)
     {
         Loop loopToRemove = loops[loopIndex];
-        loops.RemoveAt(loopIndex);
+        for (int i = 0; i < loops[loopIndex].noteBeats.Count; i++)
+            loops[loopIndex].noteBeats[i].Clear();
 
         // determine which notes in this loop are not duplicated in other loops
         // TODO: Efficiency improvements
+        // TODO: Fix all this code
         for (int instrumentNumber = 0; instrumentNumber < loopToRemove.noteBeats.Count; instrumentNumber++)
         {
             foreach (Loop loop in loops)
             {
-                List<double> loopNoteBeats = loop.noteBeats[instrumentNumber];
-                foreach(double noteBeat in loopNoteBeats)
-                {
-                    for(int beatNum = 0; beatNum < loopToRemove.noteBeats[instrumentNumber].Count; beatNum++)
-                    {
-                        if(Mathf.Approximately((float)loopToRemove.noteBeats[instrumentNumber][beatNum],(float)noteBeat))
-                        {
-                            loopToRemove.noteBeats[instrumentNumber].RemoveAt(beatNum);
-                            beatNum--;
-                        }
-                    }
-                }
+                loopToRemove.noteBeats[instrumentNumber] = RemoveSharedNoteBeats(loopToRemove.noteBeats[instrumentNumber], loop.noteBeats[instrumentNumber]);
             }
         }
 
@@ -179,6 +194,23 @@ public class LoopPlayer : MonoBehaviour {
             List<double> noteBeats = loopToRemove.noteBeats[instrumentNum];
             tracks[instrumentNum] = RemoveNoteBeatsFromTrack(tracks[instrumentNum], noteBeats);
         }
+    }
+
+    List<double> RemoveSharedNoteBeats(List<double> noteBeatsToReturn,List<double> noteBeatsToNotOverlap)
+    {
+        for(int i = 0; i < noteBeatsToReturn.Count; i++)
+        {
+            foreach(double beat in noteBeatsToNotOverlap)
+            {
+                if(Mathf.Approximately((float)beat,(float)noteBeatsToReturn[i]))
+                {
+                    noteBeatsToReturn.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+
+        return noteBeatsToReturn;
     }
 
     TrackLoopInfo RemoveNoteBeatsFromTrack(TrackLoopInfo track,List<double> noteBeats)
@@ -200,9 +232,13 @@ public class LoopPlayer : MonoBehaviour {
         }
 
         // Recalculate next note stuff for track
-        track.currentNoteIndex = 0;
-        double startOfMeasure = SongController.GetNextStartOfMeasure();
-        track.nextNoteTime = startOfMeasure + track.noteBeats[0] / SongController.GetBPM() * 60.0;
+        if(track.noteBeats.Count > 0)
+        {
+
+            track.currentNoteIndex = 0;
+            double startOfMeasure = SongController.GetNextStartOfMeasure();
+            track.nextNoteTime = startOfMeasure + track.noteBeats[0] / SongController.GetBPM() * 60.0;
+        }
 
         return track;
     }

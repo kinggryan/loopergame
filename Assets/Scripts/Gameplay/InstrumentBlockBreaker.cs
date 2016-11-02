@@ -10,7 +10,7 @@ public class InstrumentBlockBreaker : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        instrumentBuckets = new int[][]{new int[] { 0 } };
+        instrumentBuckets = new int[][]{new int[] { 0 } , new int[] { } };
 	}
 	
 	// Update is called once per frame

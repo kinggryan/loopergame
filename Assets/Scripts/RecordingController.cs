@@ -11,6 +11,9 @@ public class RecordingController : MonoBehaviour {
     public AudioSource[] instrumentSources;
     public LoopPlayer loopPlayer;
 
+    public int numLoops = 4;
+    private int selectedLoop = 0;
+
 	// Use this for initialization
 	void Start () {
 		ResetRecordedNotes ();
@@ -34,6 +37,23 @@ public class RecordingController : MonoBehaviour {
                 {
                     StartRecording();
                 }
+            }
+
+            if(Input.GetKeyDown("1"))
+            {
+                selectedLoop = 0;
+            }
+            if (Input.GetKeyDown("2"))
+            {
+                selectedLoop = 1;
+            }
+            if (Input.GetKeyDown("3"))
+            {
+                selectedLoop = 2;
+            }
+            if (Input.GetKeyDown("4"))
+            {
+                selectedLoop = 3;
             }
         }
         else
@@ -64,7 +84,7 @@ public class RecordingController : MonoBehaviour {
         Debug.Log("Stop recording " + recordedNotes);
         if (recordedNotes.Length > 0)
         {
-            loopPlayer.PlayLoop(recordedNotes, instrumentSources);
+            loopPlayer.PlayLoop(recordedNotes, instrumentSources, selectedLoop);
         }
         isRecording = false;
 		ResetRecordedNotes ();
